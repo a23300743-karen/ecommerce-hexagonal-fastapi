@@ -11,11 +11,12 @@ from app.application.services.order_service import OrderService
 from app.adapters.api.routers.product_router import get_product_router
 from app.adapters.api.routers.buyer_router import get_buyer_router
 from app.adapters.api.routers.order_router import get_order_router
+from app.adapters.api.routers.auth_router import router as auth_router
 
 app = FastAPI(
     title="E-commerce de tecnologia",
     description="Backend de e-commerce usando FastAPI y Arquitectura Hexagonal",
-    version="1.1.0"
+    version="1.2.0"
 )
 
 product_repository = MySQLProductRepository()
@@ -31,6 +32,7 @@ order_service = OrderService(
     buyer_repository
 )
 
+app.include_router(auth_router)
 app.include_router(get_product_router(product_service))
 app.include_router(get_buyer_router(buyer_service))
 app.include_router(get_order_router(order_service))

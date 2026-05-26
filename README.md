@@ -43,9 +43,48 @@ La regla principal del proyecto es que `domain` y `application` no dependen de F
 - `GET /orders/{order_id}/items`
 - `PATCH /orders/{order_id}/cancel`
 
+### Auth
+
+- `POST /auth/register`
+- `POST /auth/login`
+- `GET /auth/me`
+
 Al crear una orden se descuenta stock del producto. Al cancelar una orden se restaura el stock de los items asociados.
 
 Los `DELETE` de productos y compradores son eliminaciones logicas: cambian el `status` a `INACTIVE` para no romper el historial de ordenes.
+
+## Autenticacion y autorizacion
+
+El proyecto implementa OAuth2 con Bearer Token y JWT:
+
+1. El usuario se registra en `/auth/register`.
+2. El usuario inicia sesion en `/auth/login`.
+3. El backend valida email y contrasena hasheada.
+4. El backend genera un JWT firmado con expiracion.
+5. El cliente manda el token en `Authorization: Bearer <token>`.
+
+Endpoints protegidos:
+
+- `POST /products/`: requiere usuario `ADMIN`.
+- `PUT /products/{product_id}`: requiere usuario `ADMIN`.
+- `DELETE /products/{product_id}`: requiere usuario `ADMIN`.
+- `POST /orders/`: requiere usuario autenticado.
+- `PATCH /orders/{order_id}/cancel`: requiere usuario autenticado.
+- `GET /auth/me`: requiere usuario autenticado.
+
+Endpoints publicos:
+
+- `GET /products/`
+- `GET /products/search?name=...`
+- `GET /products/{product_id}`
+
+Variables de entorno opcionales para JWT:
+
+```env
+JWT_SECRET_KEY=CAMBIA_ESTA_CLAVE_SECRETA
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+```
 
 ## Validaciones principales
 
@@ -149,6 +188,16 @@ CREATE TABLE IF NOT EXISTS order_items (
     FOREIGN KEY (order_id) REFERENCES purchase_orders(id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products(id)
 );
+
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'CUSTOMER',
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
 > Nota: la base permite `products.description` como `NULL`, pero la API lo solicita al crear productos para mantener una ficha de producto mas completa.
@@ -158,6 +207,20 @@ Si ya tienes creada la tabla `buyer_profiles` sin `status`, ejecuta:
 ```sql
 ALTER TABLE buyer_profiles
 ADD COLUMN status VARCHAR(20) DEFAULT 'ACTIVE';
+```
+
+Para autenticacion ejecuta tambien:
+
+```sql
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'CUSTOMER',
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
 ## Ejecutar
@@ -203,5 +266,25 @@ Crear orden:
   "buyer_id": 1,
   "product_id": 1,
   "quantity": 2
+}
+```
+
+Registrar admin:
+
+```json
+{
+  "name": "Admin",
+  "email": "admin@email.com",
+  "password": "123456",
+  "role": "ADMIN"
+}
+```
+
+Login:
+
+```json
+{
+  "email": "admin@email.com",
+  "password": "123456"
 }
 ```

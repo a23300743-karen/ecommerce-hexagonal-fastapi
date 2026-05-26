@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
+from app.adapters.api.dependencies.auth_dependencies import require_admin
 from app.adapters.api.schemas.product_schema import ProductRequest, ProductResponse
 from app.application.services.product_service import ProductService
 
@@ -15,7 +16,8 @@ def get_product_router(
 
     @router.post("/", response_model=ProductResponse)
     def create_product(
-        request: ProductRequest
+        request: ProductRequest,
+        current_user=Depends(require_admin)
     ):
 
         try:
@@ -75,7 +77,8 @@ def get_product_router(
     @router.put("/{product_id}", response_model=ProductResponse)
     def update_product(
         product_id: int,
-        request: ProductRequest
+        request: ProductRequest,
+        current_user=Depends(require_admin)
     ):
 
         try:
@@ -98,7 +101,8 @@ def get_product_router(
 
     @router.delete("/{product_id}", response_model=ProductResponse)
     def delete_product(
-        product_id: int
+        product_id: int,
+        current_user=Depends(require_admin)
     ):
 
         try:

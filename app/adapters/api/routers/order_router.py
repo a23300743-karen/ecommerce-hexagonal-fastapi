@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from app.adapters.api.dependencies.auth_dependencies import get_current_user
 from app.adapters.api.schemas.order_schema import OrderItemResponse, OrderRequest, OrderResponse
 from app.application.services.order_service import OrderService
 
@@ -14,7 +15,8 @@ def get_order_router(
 
     @router.post("/", response_model=OrderResponse)
     def create_order(
-        request: OrderRequest
+        request: OrderRequest,
+        current_user=Depends(get_current_user)
     ):
 
         try:
@@ -71,7 +73,8 @@ def get_order_router(
 
     @router.patch("/{order_id}/cancel", response_model=OrderResponse)
     def cancel_order(
-        order_id: int
+        order_id: int,
+        current_user=Depends(get_current_user)
     ):
 
         try:
