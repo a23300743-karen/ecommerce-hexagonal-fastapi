@@ -1,9 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class BuyerRequest(BaseModel):
-    name: str
-    email: str
-    address: str
+    name: str = Field(..., min_length=2)
+    email: str = Field(..., min_length=5)
+    address: str = Field(..., min_length=5)
     phone: str | None = None
 
 

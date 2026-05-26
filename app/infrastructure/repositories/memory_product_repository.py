@@ -1,83 +1,33 @@
 from app.domain.models.product import Product
 from app.domain.ports.product_repository import ProductRepository
-from app.infrastructure.db.connection import get_connection
 
-class MySQLProductRepository(ProductRepository):
+
+class MemoryProductRepository(ProductRepository):
+
+    def __init__(self):
+        self.products = []
+        self.current_id = 1
 
     def save(self, product: Product) -> Product:
-        connection = get_connection()
-        cursor = connection.cursor()
-
-        sql = """
-        INSERT INTO products (name, description, price, stock, status)
-        VALUES (%s, %s, %s, %s, %s)
-        """
-
-        values = (
-            product.name,
-            product.description,
-            product.price,
-            product.stock,
-            product.status
-        )
-
-        cursor.execute(sql, values)
-        connection.commit()
-
-        product.id = cursor.lastrowid
-
-        cursor.close()
-        connection.close()
-
+        product.id = self.current_id
+        self.current_id += 1
+        self.products.append(product)
         return product
 
     def get_all(self):
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
-
-        cursor.execute("SELECT id, name, description, price, stock, status FROM products")
-
-        products = []
-
-        for row in cursor.fetchall():
-            products.append(
-                Product(
-                    id=row["id"],
-                    name=row["name"],
-                    description=row["description"],
-                    price=float(row["price"]),
-                    stock=row["stock"],
-                    status=row["status"]
-                )
-            )
-
-        cursor.close()
-        connection.close()
-
-        return products
+        return self.products
 
     def get_by_id(self, product_id: int):
-        connection = get_connection()
-        cursor = connection.cursor(dictionary=True)
+        for product in self.products:
+            if product.id == product_id:
+                return product
+        return None
 
-        cursor.execute(
-            "SELECT id, name, description, price, stock, status FROM products WHERE id = %s",
-            (product_id,)
-        )
+    def update_stock(self, product_id: int, stock: int):
+        product = self.get_by_id(product_id)
 
-        row = cursor.fetchone()
-
-        cursor.close()
-        connection.close()
-
-        if row is None:
+        if product is None:
             return None
 
-        return Product(
-            id=row["id"],
-            name=row["name"],
-            description=row["description"],
-            price=float(row["price"]),
-            stock=row["stock"],
-            status=row["status"]
-        )
+        product.stock = stock
+        return product

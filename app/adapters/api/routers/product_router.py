@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from app.adapters.api.schemas.product_schema import ProductRequest
+from app.adapters.api.schemas.product_schema import ProductRequest, ProductResponse
 from app.application.services.product_service import ProductService
 
 router = APIRouter(
@@ -12,7 +12,7 @@ def get_product_router(
     service: ProductService
 ):
 
-    @router.post("/")
+    @router.post("/", response_model=ProductResponse)
     def create_product(
         request: ProductRequest
     ):
@@ -33,9 +33,25 @@ def get_product_router(
                 detail=str(error)
             )
 
-    @router.get("/")
+    @router.get("/", response_model=list[ProductResponse])
     def list_products():
 
         return service.list_products()
+
+    @router.get("/{product_id}", response_model=ProductResponse)
+    def get_product(
+        product_id: int
+    ):
+
+        try:
+
+            return service.get_product(product_id)
+
+        except ValueError as error:
+
+            raise HTTPException(
+                status_code=404,
+                detail=str(error)
+            )
 
     return router

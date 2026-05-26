@@ -81,3 +81,19 @@ class MySQLProductRepository(ProductRepository):
             stock=row["stock"],
             status=row["status"]
         )
+
+    def update_stock(self, product_id: int, stock: int):
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        cursor.execute(
+            "UPDATE products SET stock = %s WHERE id = %s",
+            (stock, product_id)
+        )
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        return self.get_by_id(product_id)

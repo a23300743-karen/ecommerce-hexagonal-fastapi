@@ -1,3 +1,5 @@
+import mysql.connector
+
 from app.domain.models.buyer_profile import BuyerProfile
 from app.domain.ports.buyer_repository import BuyerRepository
 from app.infrastructure.db.connection import get_connection
@@ -32,12 +34,22 @@ class MySQLBuyerRepository(BuyerRepository):
             buyer.phone
         )
 
-        cursor.execute(
-            sql,
-            values
-        )
+        try:
 
-        connection.commit()
+            cursor.execute(
+                sql,
+                values
+            )
+
+            connection.commit()
+
+        except mysql.connector.errors.IntegrityError as error:
+
+            cursor.close()
+
+            connection.close()
+
+            raise ValueError("El correo ya existe") from error
 
         buyer.id = cursor.lastrowid
 
@@ -71,6 +83,51 @@ class MySQLBuyerRepository(BuyerRepository):
             """,
             (
                 buyer_id,
+            )
+        )
+
+        row = cursor.fetchone()
+
+        cursor.close()
+
+        connection.close()
+
+        if row is None:
+
+            return None
+
+        return BuyerProfile(
+            id=row["id"],
+            name=row["name"],
+            email=row["email"],
+            address=row["address"],
+            phone=row["phone"]
+        )
+
+    def get_by_email(
+        self,
+        email: str
+    ):
+
+        connection = get_connection()
+
+        cursor = connection.cursor(
+            dictionary=True
+        )
+
+        cursor.execute(
+            """
+            SELECT
+                id,
+                name,
+                email,
+                address,
+                phone
+            FROM buyer_profiles
+            WHERE email=%s
+            """,
+            (
+                email,
             )
         )
 

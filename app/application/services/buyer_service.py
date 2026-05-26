@@ -1,13 +1,13 @@
 from app.domain.models.buyer_profile import BuyerProfile
 from app.domain.ports.buyer_repository import BuyerRepository
 
+
 class BuyerService:
 
     def __init__(
         self,
         repository: BuyerRepository
     ):
-
         self.repository = repository
 
     def create_buyer(
@@ -19,10 +19,10 @@ class BuyerService:
     ) -> BuyerProfile:
 
         if "@" not in email:
+            raise ValueError("Correo invalido")
 
-            raise ValueError(
-                "Correo inválido"
-            )
+        if self.repository.get_by_email(email) is not None:
+            raise ValueError("El correo ya existe")
 
         buyer = BuyerProfile(
             id=0,
@@ -32,12 +32,15 @@ class BuyerService:
             phone=phone
         )
 
-        return self.repository.save(
-            buyer
-        )
+        return self.repository.save(buyer)
 
-    def list_buyers(
-        self
-    ):
-
+    def list_buyers(self):
         return self.repository.get_all()
+
+    def get_buyer(self, buyer_id: int) -> BuyerProfile:
+        buyer = self.repository.get_by_id(buyer_id)
+
+        if buyer is None:
+            raise ValueError("El perfil de compra no existe")
+
+        return buyer

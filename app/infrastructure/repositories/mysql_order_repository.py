@@ -164,6 +164,54 @@ class MySQLOrderRepository(OrderRepository):
             status=row["status"]
         )
 
+    def get_items_by_order_id(
+        self,
+        order_id: int
+    ):
+
+        connection = get_connection()
+
+        cursor = connection.cursor(
+            dictionary=True
+        )
+
+        cursor.execute(
+            """
+            SELECT
+                id,
+                order_id,
+                product_id,
+                quantity,
+                unit_price,
+                subtotal
+            FROM order_items
+            WHERE order_id=%s
+            """,
+            (
+                order_id,
+            )
+        )
+
+        items = []
+
+        for row in cursor.fetchall():
+
+            items.append(
+                OrderItem(
+                    id=row["id"],
+                    order_id=row["order_id"],
+                    product_id=row["product_id"],
+                    quantity=row["quantity"],
+                    unit_price=float(row["unit_price"]),
+                    subtotal=float(row["subtotal"])
+                )
+            )
+
+        cursor.close()
+        connection.close()
+
+        return items
+
     def cancel(
         self,
         order_id: int

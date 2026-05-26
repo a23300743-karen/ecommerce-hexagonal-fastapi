@@ -24,3 +24,25 @@ class MemoryOrderRepository(OrderRepository):
 
     def get_all(self):
         return self.orders
+
+    def get_by_id(self, order_id: int):
+        for order in self.orders:
+            if order.id == order_id:
+                return order
+        return None
+
+    def get_items_by_order_id(self, order_id: int):
+        return [
+            item
+            for item in self.items
+            if item.order_id == order_id
+        ]
+
+    def cancel(self, order_id: int):
+        order = self.get_by_id(order_id)
+
+        if order is None:
+            return None
+
+        order.status = "CANCELLED"
+        return order

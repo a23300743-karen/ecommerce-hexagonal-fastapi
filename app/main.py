@@ -13,9 +13,9 @@ from app.adapters.api.routers.buyer_router import get_buyer_router
 from app.adapters.api.routers.order_router import get_order_router
 
 app = FastAPI(
-    title="E-commerce mini Amazon tecnología",
+    title="E-commerce de tecnologia",
     description="Backend de e-commerce usando FastAPI y Arquitectura Hexagonal",
-    version="1.0.0"
+    version="1.1.0"
 )
 
 product_repository = MySQLProductRepository()

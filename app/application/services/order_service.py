@@ -4,6 +4,7 @@ from app.domain.ports.order_repository import OrderRepository
 from app.domain.ports.product_repository import ProductRepository
 from app.domain.ports.buyer_repository import BuyerRepository
 
+
 class OrderService:
 
     def __init__(
@@ -28,7 +29,7 @@ class OrderService:
             raise ValueError("El producto no existe")
 
         if product.status != "ACTIVE":
-            raise ValueError("El producto no está activo")
+            raise ValueError("El producto no esta activo")
 
         if quantity <= 0:
             raise ValueError("La cantidad debe ser mayor a 0")
@@ -39,6 +40,7 @@ class OrderService:
         total = product.price * quantity
 
         product.stock -= quantity
+        self.product_repository.update_stock(product.id, product.stock)
 
         order = Order(
             id=0,
@@ -65,6 +67,18 @@ class OrderService:
     def list_orders(self):
         return self.order_repository.get_all()
 
+    def get_order(self, order_id: int) -> Order:
+        order = self.order_repository.get_by_id(order_id)
+
+        if order is None:
+            raise ValueError("La orden no existe")
+
+        return order
+
+    def get_order_items(self, order_id: int) -> list[OrderItem]:
+        self.get_order(order_id)
+        return self.order_repository.get_items_by_order_id(order_id)
+
     def cancel_order(self, order_id: int):
         order = self.order_repository.get_by_id(order_id)
 
@@ -72,6 +86,17 @@ class OrderService:
             raise ValueError("La orden no existe")
 
         if order.status == "CANCELLED":
-            raise ValueError("La orden ya está cancelada")
+            raise ValueError("La orden ya esta cancelada")
+
+        items = self.order_repository.get_items_by_order_id(order_id)
+
+        for item in items:
+            product = self.product_repository.get_by_id(item.product_id)
+
+            if product is not None:
+                self.product_repository.update_stock(
+                    product.id,
+                    product.stock + item.quantity
+                )
 
         return self.order_repository.cancel(order_id)

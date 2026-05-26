@@ -1,6 +1,7 @@
 from app.domain.models.product import Product
 from app.domain.ports.product_repository import ProductRepository
 
+
 class ProductService:
 
     def __init__(self, repository: ProductRepository):
@@ -33,3 +34,11 @@ class ProductService:
 
     def list_products(self):
         return self.repository.get_all()
+
+    def get_product(self, product_id: int) -> Product:
+        product = self.repository.get_by_id(product_id)
+
+        if product is None:
+            raise ValueError("El producto no existe")
+
+        return product

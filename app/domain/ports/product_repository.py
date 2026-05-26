@@ -14,3 +14,7 @@ class ProductRepository(ABC):
     @abstractmethod
     def get_by_id(self, product_id: int) -> Product | None:
         pass
+
+    @abstractmethod
+    def update_stock(self, product_id: int, stock: int) -> Product | None:
+        pass

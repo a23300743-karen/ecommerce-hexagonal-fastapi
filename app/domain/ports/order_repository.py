@@ -21,5 +21,9 @@ class OrderRepository(ABC):
         pass
 
     @abstractmethod
+    def get_items_by_order_id(self, order_id: int) -> list[OrderItem]:
+        pass
+
+    @abstractmethod
     def cancel(self, order_id: int) -> Order:
         pass

@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException
-import mysql.connector
 
-from app.adapters.api.schemas.buyer_schema import BuyerRequest
+from app.adapters.api.schemas.buyer_schema import BuyerRequest, BuyerResponse
 from app.application.services.buyer_service import BuyerService
 
 router = APIRouter(
@@ -13,7 +12,7 @@ def get_buyer_router(
     service: BuyerService
 ):
 
-    @router.post("/")
+    @router.post("/", response_model=BuyerResponse)
     def create_buyer(
         request: BuyerRequest
     ):
@@ -34,16 +33,25 @@ def get_buyer_router(
                 detail=str(error)
             )
 
-        except mysql.connector.errors.IntegrityError:
-
-            raise HTTPException(
-                status_code=400,
-                detail="El correo ya existe"
-            )
-
-    @router.get("/")
+    @router.get("/", response_model=list[BuyerResponse])
     def list_buyers():
 
         return service.list_buyers()
+
+    @router.get("/{buyer_id}", response_model=BuyerResponse)
+    def get_buyer(
+        buyer_id: int
+    ):
+
+        try:
+
+            return service.get_buyer(buyer_id)
+
+        except ValueError as error:
+
+            raise HTTPException(
+                status_code=404,
+                detail=str(error)
+            )
 
     return router

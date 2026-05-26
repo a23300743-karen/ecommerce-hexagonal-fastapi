@@ -18,3 +18,12 @@ class MemoryBuyerRepository(BuyerRepository):
             if buyer.id == buyer_id:
                 return buyer
         return None
+
+    def get_by_email(self, email: str):
+        for buyer in self.buyers:
+            if buyer.email == email:
+                return buyer
+        return None
+
+    def get_all(self):
+        return self.buyers
