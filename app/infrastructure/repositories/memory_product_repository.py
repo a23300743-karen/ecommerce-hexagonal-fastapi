@@ -23,6 +23,29 @@ class MemoryProductRepository(ProductRepository):
                 return product
         return None
 
+    def search_by_name(self, name: str):
+        clean_name = name.lower()
+
+        return [
+            product
+            for product in self.products
+            if clean_name in product.name.lower()
+        ]
+
+    def update(self, product_id: int, product: Product):
+        current_product = self.get_by_id(product_id)
+
+        if current_product is None:
+            return None
+
+        current_product.name = product.name
+        current_product.description = product.description
+        current_product.price = product.price
+        current_product.stock = product.stock
+        current_product.status = product.status
+
+        return current_product
+
     def update_stock(self, product_id: int, stock: int):
         product = self.get_by_id(product_id)
 
@@ -30,4 +53,13 @@ class MemoryProductRepository(ProductRepository):
             return None
 
         product.stock = stock
+        return product
+
+    def change_status(self, product_id: int, status: str):
+        product = self.get_by_id(product_id)
+
+        if product is None:
+            return None
+
+        product.status = status
         return product

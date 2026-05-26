@@ -16,5 +16,17 @@ class BuyerRepository(ABC):
         pass
 
     @abstractmethod
+    def search_by_name(self, name: str) -> list[BuyerProfile]:
+        pass
+
+    @abstractmethod
     def get_all(self) -> list[BuyerProfile]:
+        pass
+
+    @abstractmethod
+    def update(self, buyer_id: int, buyer: BuyerProfile) -> BuyerProfile | None:
+        pass
+
+    @abstractmethod
+    def change_status(self, buyer_id: int, status: str) -> BuyerProfile | None:
         pass

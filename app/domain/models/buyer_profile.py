@@ -7,3 +7,4 @@ class BuyerProfile:
     email: str
     address: str
     phone: str | None = None
+    status: str = "ACTIVE"

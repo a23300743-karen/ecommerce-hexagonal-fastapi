@@ -21,13 +21,19 @@ La regla principal del proyecto es que `domain` y `application` no dependen de F
 
 - `POST /products/`
 - `GET /products/`
+- `GET /products/search?name=laptop`
 - `GET /products/{product_id}`
+- `PUT /products/{product_id}`
+- `DELETE /products/{product_id}`
 
 ### Buyers
 
 - `POST /buyers/`
 - `GET /buyers/`
+- `GET /buyers/search?name=ana`
 - `GET /buyers/{buyer_id}`
+- `PUT /buyers/{buyer_id}`
+- `DELETE /buyers/{buyer_id}`
 
 ### Orders
 
@@ -38,6 +44,38 @@ La regla principal del proyecto es que `domain` y `application` no dependen de F
 - `PATCH /orders/{order_id}/cancel`
 
 Al crear una orden se descuenta stock del producto. Al cancelar una orden se restaura el stock de los items asociados.
+
+Los `DELETE` de productos y compradores son eliminaciones logicas: cambian el `status` a `INACTIVE` para no romper el historial de ordenes.
+
+## Validaciones principales
+
+### Productos
+
+- `name` no puede estar vacio.
+- `description` no puede estar vacia.
+- `price` debe ser mayor a 0.
+- `stock` debe ser mayor o igual a 0.
+- `status` solo puede ser `ACTIVE` o `INACTIVE`.
+
+### Buyers
+
+- `name` no puede estar vacio.
+- `email` debe contener `@` y terminar en `.com`.
+- `email` debe ser unico.
+- `address` no puede estar vacia.
+- `phone` es opcional, pero si existe debe tener minimo 10 digitos.
+- `status` solo puede ser `ACTIVE` o `INACTIVE`.
+
+### Orders
+
+- `buyer_id` debe existir.
+- El comprador debe estar `ACTIVE`.
+- `product_id` debe existir.
+- El producto debe estar `ACTIVE`.
+- `quantity` debe ser mayor a 0.
+- Debe existir stock suficiente.
+- No se puede cancelar una orden inexistente.
+- No se puede cancelar una orden ya cancelada.
 
 ## Requisitos
 
@@ -88,6 +126,7 @@ CREATE TABLE IF NOT EXISTS buyer_profiles (
     email VARCHAR(100) NOT NULL UNIQUE,
     address VARCHAR(200) NOT NULL,
     phone VARCHAR(20) DEFAULT NULL,
+    status VARCHAR(20) DEFAULT 'ACTIVE',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -113,6 +152,13 @@ CREATE TABLE IF NOT EXISTS order_items (
 ```
 
 > Nota: la base permite `products.description` como `NULL`, pero la API lo solicita al crear productos para mantener una ficha de producto mas completa.
+
+Si ya tienes creada la tabla `buyer_profiles` sin `status`, ejecuta:
+
+```sql
+ALTER TABLE buyer_profiles
+ADD COLUMN status VARCHAR(20) DEFAULT 'ACTIVE';
+```
 
 ## Ejecutar
 

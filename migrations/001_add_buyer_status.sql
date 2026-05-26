@@ -1,0 +1,2 @@
+ALTER TABLE buyer_profiles
+ADD COLUMN status VARCHAR(20) DEFAULT 'ACTIVE';

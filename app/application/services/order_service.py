@@ -23,6 +23,9 @@ class OrderService:
         if buyer is None:
             raise ValueError("El perfil de compra no existe")
 
+        if buyer.status != "ACTIVE":
+            raise ValueError("El perfil de compra no esta activo")
+
         product = self.product_repository.get_by_id(product_id)
 
         if product is None:

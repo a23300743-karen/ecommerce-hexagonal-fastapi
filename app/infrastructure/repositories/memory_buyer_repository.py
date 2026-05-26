@@ -1,6 +1,7 @@
 from app.domain.models.buyer_profile import BuyerProfile
 from app.domain.ports.buyer_repository import BuyerRepository
 
+
 class MemoryBuyerRepository(BuyerRepository):
 
     def __init__(self):
@@ -25,5 +26,37 @@ class MemoryBuyerRepository(BuyerRepository):
                 return buyer
         return None
 
+    def search_by_name(self, name: str):
+        clean_name = name.lower()
+
+        return [
+            buyer
+            for buyer in self.buyers
+            if clean_name in buyer.name.lower()
+        ]
+
     def get_all(self):
         return self.buyers
+
+    def update(self, buyer_id: int, buyer: BuyerProfile):
+        current_buyer = self.get_by_id(buyer_id)
+
+        if current_buyer is None:
+            return None
+
+        current_buyer.name = buyer.name
+        current_buyer.email = buyer.email
+        current_buyer.address = buyer.address
+        current_buyer.phone = buyer.phone
+        current_buyer.status = buyer.status
+
+        return current_buyer
+
+    def change_status(self, buyer_id: int, status: str):
+        buyer = self.get_by_id(buyer_id)
+
+        if buyer is None:
+            return None
+
+        buyer.status = status
+        return buyer
