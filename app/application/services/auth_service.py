@@ -58,7 +58,39 @@ class AuthService:
         if not self.password_service.verify_password(password, user.password_hash):
             raise ValueError("Credenciales invalidas")
 
-        token = self.token_service.create_access_token(
+        token_data = {
+            "sub": str(user.id),
+            "email": user.email,
+            "role": user.role
+        }
+
+        access_token = self.token_service.create_access_token(token_data)
+        refresh_token = self.token_service.create_refresh_token(
+            {
+                "sub": str(user.id),
+                "email": user.email
+            }
+        )
+
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer"
+        }
+
+    def refresh_access_token(self, refresh_token: str):
+        payload = self.token_service.decode_refresh_token(refresh_token)
+
+        user_id = int(payload.get("sub"))
+        user = self.user_repository.get_by_id(user_id)
+
+        if user is None:
+            raise ValueError("Usuario no encontrado")
+
+        if user.status != "ACTIVE":
+            raise ValueError("Usuario inactivo")
+
+        access_token = self.token_service.create_access_token(
             {
                 "sub": str(user.id),
                 "email": user.email,
@@ -67,7 +99,7 @@ class AuthService:
         )
 
         return {
-            "access_token": token,
+            "access_token": access_token,
             "token_type": "bearer"
         }
 

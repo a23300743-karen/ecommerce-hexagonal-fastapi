@@ -47,6 +47,7 @@ La regla principal del proyecto es que `domain` y `application` no dependen de F
 
 - `POST /auth/register`
 - `POST /auth/login`
+- `POST /auth/refresh`
 - `GET /auth/me`
 
 Al crear una orden se descuenta stock del producto. Al cancelar una orden se restaura el stock de los items asociados.
@@ -60,8 +61,9 @@ El proyecto implementa OAuth2 con Bearer Token y JWT:
 1. El usuario se registra en `/auth/register`.
 2. El usuario inicia sesion en `/auth/login`.
 3. El backend valida email y contrasena hasheada.
-4. El backend genera un JWT firmado con expiracion.
-5. El cliente manda el token en `Authorization: Bearer <token>`.
+4. El backend genera un `access_token` JWT y un `refresh_token` JWT.
+5. El cliente manda el `access_token` en `Authorization: Bearer <token>`.
+6. Cuando el `access_token` expira, el cliente usa `/auth/refresh` para pedir uno nuevo con el `refresh_token`.
 
 Endpoints protegidos:
 
@@ -84,6 +86,7 @@ Variables de entorno opcionales para JWT:
 JWT_SECRET_KEY=CAMBIA_ESTA_CLAVE_SECRETA
 JWT_ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=60
+REFRESH_TOKEN_EXPIRE_DAYS=7
 ```
 
 ## Validaciones principales
@@ -286,5 +289,23 @@ Login:
 {
   "email": "admin@email.com",
   "password": "123456"
+}
+```
+
+Respuesta de login:
+
+```json
+{
+  "access_token": "TOKEN_CORTO",
+  "refresh_token": "TOKEN_LARGO",
+  "token_type": "bearer"
+}
+```
+
+Renovar access token:
+
+```json
+{
+  "refresh_token": "TOKEN_LARGO"
 }
 ```

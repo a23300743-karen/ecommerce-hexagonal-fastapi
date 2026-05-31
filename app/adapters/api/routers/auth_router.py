@@ -4,6 +4,7 @@ from pydantic import ValidationError
 from app.adapters.api.dependencies.auth_dependencies import get_current_user
 from app.adapters.api.schemas.auth_schema import (
     LoginRequest,
+    RefreshTokenRequest,
     RegisterRequest,
     TokenResponse,
     UserResponse
@@ -61,6 +62,26 @@ async def login(request: Request):
         raise HTTPException(
             status_code=401,
             detail=str(error)
+        )
+
+
+@router.post("/refresh", response_model=TokenResponse)
+def refresh_token(request: RefreshTokenRequest):
+    try:
+        return auth_service.refresh_access_token(
+            request.refresh_token
+        )
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=401,
+            detail=str(error)
+        )
+
+    except Exception:
+        raise HTTPException(
+            status_code=401,
+            detail="Refresh token invalido"
         )
 
 
