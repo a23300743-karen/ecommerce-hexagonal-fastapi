@@ -47,6 +47,7 @@ La regla principal del proyecto es que `domain` y `application` no dependen de F
 
 - `POST /auth/register`
 - `POST /auth/login`
+- `POST /auth/login-json`
 - `POST /auth/refresh`
 - `GET /auth/me`
 
@@ -283,7 +284,14 @@ Registrar admin:
 }
 ```
 
-Login:
+Login OAuth2 en Swagger:
+
+```txt
+username: admin@email.com
+password: 123456
+```
+
+Login JSON alternativo:
 
 ```json
 {

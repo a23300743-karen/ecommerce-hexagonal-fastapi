@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import ValidationError
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
 
 from app.adapters.api.dependencies.auth_dependencies import get_current_user
 from app.adapters.api.schemas.auth_schema import (
@@ -49,13 +49,26 @@ def register(request: RegisterRequest):
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(request: Request):
+def login(form_data: OAuth2PasswordRequestForm = Depends()):
     try:
-        credentials = await _get_login_credentials(request)
-
         return auth_service.login(
-            credentials.email,
-            credentials.password
+            form_data.username,
+            form_data.password
+        )
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=401,
+            detail=str(error)
+        )
+
+
+@router.post("/login-json", response_model=TokenResponse)
+def login_json(request: LoginRequest):
+    try:
+        return auth_service.login(
+            request.email,
+            request.password
         )
 
     except ValueError as error:
@@ -88,30 +101,3 @@ def refresh_token(request: RefreshTokenRequest):
 @router.get("/me", response_model=UserResponse)
 def me(current_user=Depends(get_current_user)):
     return current_user
-
-
-async def _get_login_credentials(request: Request) -> LoginRequest:
-    content_type = request.headers.get("content-type", "")
-
-    try:
-
-        if "application/json" in content_type:
-            payload = await request.json()
-
-            return LoginRequest(
-                email=payload.get("email", ""),
-                password=payload.get("password", "")
-            )
-
-        form = await request.form()
-
-        return LoginRequest(
-            email=form.get("username", "") or form.get("email", ""),
-            password=form.get("password", "")
-        )
-
-    except ValidationError as error:
-        raise HTTPException(
-            status_code=422,
-            detail=error.errors()
-        )
