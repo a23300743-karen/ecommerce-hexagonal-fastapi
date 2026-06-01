@@ -3,7 +3,6 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from app.adapters.api.dependencies.auth_dependencies import get_current_user
 from app.adapters.api.schemas.auth_schema import (
-    LoginRequest,
     RefreshTokenRequest,
     RegisterRequest,
     TokenResponse,
@@ -54,21 +53,6 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
         return auth_service.login(
             form_data.username,
             form_data.password
-        )
-
-    except ValueError as error:
-        raise HTTPException(
-            status_code=401,
-            detail=str(error)
-        )
-
-
-@router.post("/login-json", response_model=TokenResponse)
-def login_json(request: LoginRequest):
-    try:
-        return auth_service.login(
-            request.email,
-            request.password
         )
 
     except ValueError as error:
