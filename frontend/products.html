@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Productos</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Productos</h1>
+    <nav><a href="index.html">Inicio</a><a href="orders.html">Ordenes</a><a href="chat.html">Chat</a><span id="session-info"></span></nav>
+  </header>
+  <main>
+    <section id="admin-product-panel" class="panel">
+      <h2>Administrar producto</h2>
+      <form id="product-form" class="row">
+        <input id="product-id" type="hidden">
+        <div><label>Nombre</label><input id="name" required></div>
+        <div><label>Descripcion</label><input id="description" required></div>
+        <div><label>Precio</label><input id="price" type="number" min="0.01" step="0.01" required></div>
+        <div><label>Stock</label><input id="stock" type="number" min="0" required></div>
+        <div><label>Status</label><select id="status"><option>ACTIVE</option><option>INACTIVE</option></select></div>
+        <div><button type="submit">Guardar</button></div>
+      </form>
+      <div id="product-message"></div>
+    </section>
+
+    <section class="panel">
+      <form id="search-form" class="row">
+        <div><label>Buscar</label><input id="search" placeholder="laptop, mouse, teclado..."></div>
+        <div><button type="submit">Buscar</button></div>
+        <div><button type="button" class="secondary" onclick="loadProducts()">Ver todos</button></div>
+      </form>
+    </section>
+
+    <section id="products-list" class="grid"></section>
+  </main>
+  <script src="js/config.js"></script>
+  <script src="js/product.js"></script>
+</body>
+</html>

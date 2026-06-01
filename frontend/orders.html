@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ordenes</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Ordenes</h1>
+    <nav><a href="index.html">Inicio</a><a href="products.html">Productos</a><a href="chat.html">Chat</a><span id="session-info"></span></nav>
+  </header>
+  <main>
+    <div id="order-message"></div>
+    <section class="panel">
+      <h2>Crear comprador</h2>
+      <form id="buyer-form" class="row">
+        <div><label>Nombre</label><input id="buyer-name" required></div>
+        <div><label>Email</label><input id="buyer-email" type="email" required></div>
+        <div><label>Direccion</label><input id="buyer-address" required></div>
+        <div><label>Telefono</label><input id="buyer-phone"></div>
+        <div><button type="submit">Crear comprador</button></div>
+      </form>
+    </section>
+    <section class="panel">
+      <h2>Crear orden</h2>
+      <form id="order-form" class="row">
+        <div><label>Comprador</label><select id="buyer-id" required></select></div>
+        <div><label>Producto</label><select id="product-id" required></select></div>
+        <div><label>Cantidad</label><input id="quantity" type="number" min="1" value="1" required></div>
+        <div><button type="submit">Crear orden</button></div>
+      </form>
+    </section>
+    <section id="orders-list" class="grid"></section>
+  </main>
+  <script src="js/config.js"></script>
+  <script src="js/orders.js"></script>
+</body>
+</html>

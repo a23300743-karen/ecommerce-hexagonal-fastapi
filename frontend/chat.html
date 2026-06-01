@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Chat de soporte</h1>
+    <nav><a href="index.html">Inicio</a><a href="products.html">Productos</a><a href="orders.html">Ordenes</a><span id="session-info"></span></nav>
+  </header>
+  <main>
+    <section class="panel">
+      <div id="chat-status"></div>
+      <div id="chat-box" class="chat-box"></div>
+      <form id="chat-form" class="row">
+        <div><label>Mensaje</label><input id="chat-message" placeholder="Ej. Que metodos de pago aceptan?" required></div>
+        <div><button type="submit">Enviar</button></div>
+      </form>
+    </section>
+  </main>
+  <script src="js/config.js"></script>
+  <script src="js/chat.js"></script>
+</body>
+</html>

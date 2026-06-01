@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Login</h1>
+    <nav><a href="index.html">Inicio</a><a href="register.html">Registro</a><span id="session-info"></span></nav>
+  </header>
+  <main>
+    <section class="panel">
+      <form id="login-form">
+        <label>Email</label><input id="email" type="email" required>
+        <label>Contrasena</label><input id="password" type="password" required>
+        <button type="submit">Iniciar sesion</button>
+      </form>
+      <div id="auth-message"></div>
+    </section>
+  </main>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>

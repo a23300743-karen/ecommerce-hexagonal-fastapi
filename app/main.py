@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.infrastructure.repositories.mysql_product_repository import MySQLProductRepository
 from app.infrastructure.repositories.mysql_buyer_repository import MySQLBuyerRepository
@@ -18,6 +19,14 @@ app = FastAPI(
     title="E-commerce de tecnologia",
     description="Backend de e-commerce usando FastAPI y Arquitectura Hexagonal",
     version="1.3.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 product_repository = MySQLProductRepository()
