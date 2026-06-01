@@ -1,21 +1,22 @@
 # E-commerce Hexagonal FastAPI
 
-Backend de e-commerce en Python con FastAPI, MySQL y una estructura basada en Arquitectura Hexagonal.
+Backend de e-commerce en Python con FastAPI, MySQL, OAuth2/JWT y WebSockets usando Arquitectura Hexagonal.
 
 ## Arquitectura
 
 ```txt
 app/
-├── domain/          # Entidades y puertos del negocio
-├── application/     # Servicios/casos de uso
-├── infrastructure/  # Implementaciones tecnicas, MySQL y repositorios
-├── adapters/        # API HTTP, routers y schemas
-└── main.py
+|-- domain/          # Entidades y puertos del negocio
+|-- application/     # Servicios/casos de uso
+|-- infrastructure/  # MySQL, seguridad JWT/bcrypt y FAQ
+|-- adapters/        # API HTTP, schemas y WebSockets
+|-- realtime/        # Manejo de conexiones WebSocket
+`-- main.py
 ```
 
-La regla principal del proyecto es que `domain` y `application` no dependen de FastAPI ni de MySQL. Los routers reciben requests HTTP y delegan la logica a servicios de aplicacion, que trabajan contra puertos.
+La regla principal del proyecto es que `domain` y `application` no dependen de FastAPI, MySQL, JWT, bcrypt ni WebSockets. Los adapters conectan el exterior con los casos de uso.
 
-## Funciones disponibles
+## Endpoints
 
 ### Products
 
@@ -50,9 +51,9 @@ La regla principal del proyecto es que `domain` y `application` no dependen de F
 - `POST /auth/refresh`
 - `GET /auth/me`
 
-Al crear una orden se descuenta stock del producto. Al cancelar una orden se restaura el stock de los items asociados.
+### Realtime Chat
 
-Los `DELETE` de productos y compradores son eliminaciones logicas: cambian el `status` a `INACTIVE` para no romper el historial de ordenes.
+- `WS /ws/chat`
 
 ## Autenticacion y autorizacion
 
@@ -63,13 +64,13 @@ El proyecto implementa OAuth2 con Bearer Token y JWT:
 3. El backend valida email y contrasena hasheada.
 4. El backend genera un `access_token` JWT y un `refresh_token` JWT.
 5. El cliente manda el `access_token` en `Authorization: Bearer <token>`.
-6. Cuando el `access_token` expira, el cliente usa `/auth/refresh` para pedir uno nuevo con el `refresh_token`.
+6. Cuando el `access_token` expira, el cliente usa `/auth/refresh`.
 
 Endpoints protegidos:
 
-- `POST /products/`: requiere usuario `ADMIN`.
-- `PUT /products/{product_id}`: requiere usuario `ADMIN`.
-- `DELETE /products/{product_id}`: requiere usuario `ADMIN`.
+- `POST /products/`: requiere `ADMIN`.
+- `PUT /products/{product_id}`: requiere `ADMIN`.
+- `DELETE /products/{product_id}`: requiere `ADMIN`.
 - `POST /orders/`: requiere usuario autenticado.
 - `PATCH /orders/{order_id}/cancel`: requiere usuario autenticado.
 - `GET /auth/me`: requiere usuario autenticado.
@@ -80,14 +81,74 @@ Endpoints publicos:
 - `GET /products/search?name=...`
 - `GET /products/{product_id}`
 
-Variables de entorno opcionales para JWT:
+## Chat cliente-asistente con WebSockets
 
-```env
-JWT_SECRET_KEY=CAMBIA_ESTA_CLAVE_SECRETA
-JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=60
-REFRESH_TOKEN_EXPIRE_DAYS=7
+El chat de soporte funciona en tiempo real:
+
+```txt
+ws://localhost:8000/ws/chat
 ```
+
+El cliente puede enviar texto simple:
+
+```txt
+estado de mi orden
+```
+
+O un mensaje JSON:
+
+```json
+{
+  "user": "client",
+  "content": "Que metodos de pago aceptan?"
+}
+```
+
+Respuesta FAQ:
+
+```json
+{
+  "type": "faq",
+  "message": {
+    "id": null,
+    "user": "client",
+    "content": "Que metodos de pago aceptan?",
+    "created_at": "2026-05-31T00:00:00+00:00"
+  },
+  "response": "Por ahora aceptamos pagos registrados por el sistema. La integracion con pasarela de pago puede agregarse como adapter externo."
+}
+```
+
+Si no hay coincidencia:
+
+```json
+{
+  "type": "support",
+  "response": "Tu mensaje fue enviado a soporte. Un asistente lo revisara pronto."
+}
+```
+
+FAQs detectadas:
+
+- estado de ordenes
+- metodos de pago
+- tiempos de envio
+- horarios de atencion
+- cancelacion de ordenes
+- stock y disponibilidad
+
+Arquitectura del chat:
+
+```txt
+domain/models/message.py              # Entidad Message
+domain/ports/faq_port.py              # Contrato FAQPort
+application/services/chat_service.py  # Caso de uso del chat
+infrastructure/faq/                   # Motor FAQ en memoria
+realtime/connection_manager.py        # Manejo de conexiones WebSocket
+adapters/websocket/chat_socket.py     # Adapter WebSocket de FastAPI
+```
+
+La logica FAQ esta desacoplada por `FAQPort`. En el futuro se puede reemplazar `FAQMemoryRepository` por MySQL, Redis, embeddings, RAG, OpenAI/LLM o un repositorio de conocimiento externo.
 
 ## Validaciones principales
 
@@ -132,7 +193,7 @@ pip install -r requirements.txt
 
 ## Configuracion
 
-La conexion a MySQL usa variables de entorno opcionales:
+Variables de entorno opcionales para MySQL:
 
 ```env
 DB_HOST=localhost
@@ -142,68 +203,16 @@ DB_PASSWORD=
 DB_NAME=ecommerce
 ```
 
-Si no defines variables, se usan esos valores por defecto.
+Variables opcionales para JWT:
 
-## Base de datos MySQL
-
-El proyecto esta preparado para trabajar con la base `ecommerce`. La estructura actual manejada por el proyecto es compatible con el archivo `ecommerce.sql`.
-
-```sql
-CREATE DATABASE IF NOT EXISTS ecommerce;
-USE ecommerce;
-
-CREATE TABLE IF NOT EXISTS products (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    description VARCHAR(255) DEFAULT NULL,
-    price DECIMAL(10, 2) NOT NULL,
-    stock INT NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(30) DEFAULT 'ACTIVE'
-);
-
-CREATE TABLE IF NOT EXISTS buyer_profiles (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE,
-    address VARCHAR(200) NOT NULL,
-    phone VARCHAR(20) DEFAULT NULL,
-    status VARCHAR(20) DEFAULT 'ACTIVE',
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS purchase_orders (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    buyer_id INT NOT NULL,
-    status VARCHAR(50) NOT NULL DEFAULT 'CREATED',
-    total DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (buyer_id) REFERENCES buyer_profiles(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS order_items (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    order_id INT NOT NULL,
-    product_id INT NOT NULL,
-    quantity INT NOT NULL,
-    unit_price DECIMAL(10, 2) NOT NULL,
-    subtotal DECIMAL(10, 2) NOT NULL,
-    FOREIGN KEY (order_id) REFERENCES purchase_orders(id) ON DELETE CASCADE,
-    FOREIGN KEY (product_id) REFERENCES products(id)
-);
-
-CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(20) NOT NULL DEFAULT 'CUSTOMER',
-    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+```env
+JWT_SECRET_KEY=CAMBIA_ESTA_CLAVE_SECRETA
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+REFRESH_TOKEN_EXPIRE_DAYS=7
 ```
 
-> Nota: la base permite `products.description` como `NULL`, pero la API lo solicita al crear productos para mantener una ficha de producto mas completa.
+## Base de datos
 
 Si ya tienes creada la tabla `buyer_profiles` sin `status`, ejecuta:
 
@@ -212,7 +221,7 @@ ALTER TABLE buyer_profiles
 ADD COLUMN status VARCHAR(20) DEFAULT 'ACTIVE';
 ```
 
-Para autenticacion ejecuta tambien:
+Para autenticacion ejecuta:
 
 ```sql
 CREATE TABLE IF NOT EXISTS users (
@@ -239,38 +248,6 @@ http://localhost:8000/docs
 ```
 
 ## Ejemplos
-
-Crear producto:
-
-```json
-{
-  "name": "Laptop",
-  "description": "Laptop para desarrollo",
-  "price": 15000,
-  "stock": 5
-}
-```
-
-Crear comprador:
-
-```json
-{
-  "name": "Ana Lopez",
-  "email": "ana@example.com",
-  "address": "Av. Central 123",
-  "phone": "5551234567"
-}
-```
-
-Crear orden:
-
-```json
-{
-  "buyer_id": 1,
-  "product_id": 1,
-  "quantity": 2
-}
-```
 
 Registrar admin:
 
@@ -305,5 +282,38 @@ Renovar access token:
 ```json
 {
   "refresh_token": "TOKEN_LARGO"
+}
+```
+
+Crear producto:
+
+```json
+{
+  "name": "Laptop",
+  "description": "Laptop para desarrollo",
+  "price": 15000,
+  "stock": 5,
+  "status": "ACTIVE"
+}
+```
+
+Crear comprador:
+
+```json
+{
+  "name": "Ana Lopez",
+  "email": "ana@example.com",
+  "address": "Av. Central 123",
+  "phone": "5551234567"
+}
+```
+
+Crear orden:
+
+```json
+{
+  "buyer_id": 1,
+  "product_id": 1,
+  "quantity": 2
 }
 ```
