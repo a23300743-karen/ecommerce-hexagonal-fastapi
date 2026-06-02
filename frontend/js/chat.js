@@ -3,9 +3,9 @@ let socket = null;
 function addMessage(data, className = "") {
   const box = document.getElementById("chat-box");
   const div = document.createElement("div");
-  div.className = `message ${className || data.type || ""}`;
-  const content = data.message ? `<p><strong>${data.message.user}:</strong> ${data.message.content}</p>` : "";
-  div.innerHTML = `${content}<p>${data.response}</p><small>${data.type}</small>`;
+  div.className = `chat-message ${className || data.type || ""} bg-white border rounded p-3 mb-2`;
+  const content = data.message ? `<p class="mb-1"><strong>${data.message.user}:</strong> ${data.message.content}</p>` : "";
+  div.innerHTML = `${content}<p class="mb-1">${data.response}</p><span class="badge text-bg-light">${data.type}</span>`;
   box.appendChild(div);
   box.scrollTop = box.scrollHeight;
 }

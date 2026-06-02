@@ -21,27 +21,32 @@ async function loadOrders() {
   container.innerHTML = "";
 
   if (!orders.length) {
-    container.innerHTML = '<p class="muted">No hay ordenes.</p>';
+    container.innerHTML = '<div class="col-12"><div class="alert alert-secondary">No hay ordenes.</div></div>';
     return;
   }
 
   orders.forEach(order => {
-    const card = document.createElement("article");
-    card.className = "card";
-    card.innerHTML = `
-      <div class="card-body">
-        <h3>Orden #${order.id}</h3>
-        <p>Buyer ID: ${order.buyer_id}</p>
-        <p>Total: $${Number(order.total).toFixed(2)}</p>
-        <span class="badge">${order.status}</span>
-        <div class="actions">
-          <button onclick="viewItems(${order.id})">Ver items</button>
-          <button class="danger" onclick="cancelOrder(${order.id})">Cancelar</button>
+    const column = document.createElement("div");
+    column.className = "col-md-6 col-lg-4";
+    const statusClass = order.status === "CANCELLED" ? "secondary" : "success";
+    column.innerHTML = `
+      <article class="card h-100 shadow-sm border-0">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <h3 class="h5">Orden #${order.id}</h3>
+            <span class="badge text-bg-${statusClass}">${order.status}</span>
+          </div>
+          <p class="mb-1 text-secondary">Buyer ID: ${order.buyer_id}</p>
+          <p class="h5">$${Number(order.total).toFixed(2)}</p>
+          <div class="d-flex gap-2 mb-3">
+            <button class="btn btn-outline-primary btn-sm" onclick="viewItems(${order.id})">Ver items</button>
+            <button class="btn btn-outline-danger btn-sm" onclick="cancelOrder(${order.id})">Cancelar</button>
+          </div>
+          <div id="items-${order.id}" class="small text-secondary"></div>
         </div>
-        <div id="items-${order.id}" class="muted"></div>
-      </div>
+      </article>
     `;
-    container.appendChild(card);
+    container.appendChild(column);
   });
 }
 
@@ -96,7 +101,7 @@ async function viewItems(orderId) {
   try {
     const items = await apiRequest(`/orders/${orderId}/items`);
     const container = document.getElementById(`items-${orderId}`);
-    container.innerHTML = items.map(item => `Producto ${item.product_id}: ${item.quantity} x $${Number(item.unit_price).toFixed(2)}`).join("<br>");
+    container.innerHTML = items.map(item => `<div class="border-top py-1">Producto ${item.product_id}: ${item.quantity} x $${Number(item.unit_price).toFixed(2)}</div>`).join("");
   } catch (error) {
     showMessage("order-message", error.message, "error");
   }

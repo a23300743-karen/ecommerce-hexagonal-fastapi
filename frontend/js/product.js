@@ -27,29 +27,34 @@ function renderProducts(products) {
   container.innerHTML = "";
 
   if (!products.length) {
-    container.innerHTML = '<p class="muted">No hay productos para mostrar.</p>';
+    container.innerHTML = '<div class="col-12"><div class="alert alert-secondary">No hay productos para mostrar.</div></div>';
     return;
   }
 
   products.forEach(product => {
-    const card = document.createElement("article");
-    card.className = "card";
-    card.innerHTML = `
-      <img src="${productImage(product)}" alt="${product.name}">
-      <div class="card-body">
-        <h3>${product.name}</h3>
-        <p>${product.description}</p>
-        <p><strong>$${Number(product.price).toFixed(2)}</strong></p>
-        <p>Stock: ${product.stock}</p>
-        <span class="badge">${product.status}</span>
-        ${canAdmin() ? `
-          <div class="actions">
-            <button onclick='editProduct(${JSON.stringify(product)})'>Editar</button>
-            <button class="danger" onclick="deactivateProduct(${product.id})">Desactivar</button>
-          </div>` : ""}
-      </div>
+    const column = document.createElement("div");
+    column.className = "col-sm-6 col-lg-4";
+    const statusClass = product.status === "ACTIVE" ? "success" : "secondary";
+    column.innerHTML = `
+      <article class="card h-100 shadow-sm border-0">
+        <img class="product-image card-img-top" src="${productImage(product)}" alt="${product.name}">
+        <div class="card-body d-flex flex-column">
+          <div class="d-flex justify-content-between gap-2 align-items-start">
+            <h3 class="h5 card-title">${product.name}</h3>
+            <span class="badge text-bg-${statusClass}">${product.status}</span>
+          </div>
+          <p class="card-text text-secondary">${product.description}</p>
+          <p class="h5 mb-1">$${Number(product.price).toFixed(2)}</p>
+          <p class="small text-secondary">Stock: ${product.stock}</p>
+          ${canAdmin() ? `
+            <div class="d-flex gap-2 mt-auto">
+              <button class="btn btn-outline-primary btn-sm" onclick='editProduct(${JSON.stringify(product)})'>Editar</button>
+              <button class="btn btn-outline-danger btn-sm" onclick="deactivateProduct(${product.id})">Desactivar</button>
+            </div>` : ""}
+        </div>
+      </article>
     `;
-    container.appendChild(card);
+    container.appendChild(column);
   });
 }
 

@@ -55,10 +55,19 @@ async function apiRequest(path, options = {}) {
   return data;
 }
 
-function showMessage(id, message, type = "notice") {
+function showMessage(id, message, type = "info") {
   const element = document.getElementById(id);
   if (!element) return;
-  element.className = `notice ${type}`;
+
+  const variants = {
+    success: "success",
+    error: "danger",
+    warning: "warning",
+    info: "info",
+    notice: "info"
+  };
+
+  element.className = `alert alert-${variants[type] || "info"} mt-3`;
   element.textContent = message;
 }
 
@@ -73,11 +82,14 @@ function renderNav() {
   if (!container) return;
 
   if (!user) {
-    container.innerHTML = '<span class="muted">Sin sesion</span>';
+    container.innerHTML = '<span class="navbar-text text-white-50">Sin sesion</span>';
     return;
   }
 
-  container.innerHTML = `<span>${user.name} (${user.role})</span> <button onclick="logout()">Salir</button>`;
+  container.innerHTML = `
+    <span class="navbar-text text-white me-2">${user.name} (${user.role})</span>
+    <button class="btn btn-outline-light btn-sm" onclick="logout()">Salir</button>
+  `;
 }
 
 document.addEventListener("DOMContentLoaded", renderNav);
