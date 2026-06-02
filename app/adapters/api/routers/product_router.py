@@ -1,13 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 
 from app.adapters.api.dependencies.auth_dependencies import require_admin
-from app.adapters.api.schemas.product_schema import ProductRequest, ProductResponse
+from app.adapters.api.schemas.product_schema import ProductResponse
 from app.application.services.product_service import ProductService
+from app.infrastructure.storage.local_file_storage import LocalFileStorage
 
 router = APIRouter(
     prefix="/products",
     tags=["Products"]
 )
+
+storage = LocalFileStorage()
 
 
 def get_product_router(
@@ -15,19 +18,26 @@ def get_product_router(
 ):
 
     @router.post("/", response_model=ProductResponse)
-    def create_product(
-        request: ProductRequest,
+    async def create_product(
+        name: str = Form(...),
+        description: str = Form(...),
+        price: float = Form(...),
+        stock: int = Form(...),
+        status: str = Form("ACTIVE"),
+        image: UploadFile | None = File(None),
         current_user=Depends(require_admin)
     ):
 
         try:
+            image_url = await _save_image_if_present(image)
 
             return service.create_product(
-                request.name,
-                request.description,
-                request.price,
-                request.stock,
-                request.status
+                name,
+                description,
+                price,
+                stock,
+                status,
+                image_url
             )
 
         except ValueError as error:
@@ -75,21 +85,28 @@ def get_product_router(
             )
 
     @router.put("/{product_id}", response_model=ProductResponse)
-    def update_product(
+    async def update_product(
         product_id: int,
-        request: ProductRequest,
+        name: str = Form(...),
+        description: str = Form(...),
+        price: float = Form(...),
+        stock: int = Form(...),
+        status: str = Form("ACTIVE"),
+        image: UploadFile | None = File(None),
         current_user=Depends(require_admin)
     ):
 
         try:
+            image_url = await _save_image_if_present(image)
 
             return service.update_product(
                 product_id,
-                request.name,
-                request.description,
-                request.price,
-                request.stock,
-                request.status
+                name,
+                description,
+                price,
+                stock,
+                status,
+                image_url
             )
 
         except ValueError as error:
@@ -117,3 +134,19 @@ def get_product_router(
             )
 
     return router
+
+
+async def _save_image_if_present(image: UploadFile | None) -> str | None:
+    if image is None or not image.filename:
+        return None
+
+    content = await image.read()
+
+    if not content:
+        return None
+
+    return await storage.save_product_image(
+        filename=image.filename,
+        content=content,
+        content_type=image.content_type or ""
+    )

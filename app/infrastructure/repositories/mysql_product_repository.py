@@ -10,8 +10,8 @@ class MySQLProductRepository(ProductRepository):
         cursor = connection.cursor()
 
         sql = """
-        INSERT INTO products (name, description, price, stock, status)
-        VALUES (%s, %s, %s, %s, %s)
+        INSERT INTO products (name, description, price, stock, status, image_url)
+        VALUES (%s, %s, %s, %s, %s, %s)
         """
 
         values = (
@@ -19,7 +19,8 @@ class MySQLProductRepository(ProductRepository):
             product.description,
             product.price,
             product.stock,
-            product.status
+            product.status,
+            product.image_url
         )
 
         cursor.execute(sql, values)
@@ -36,7 +37,7 @@ class MySQLProductRepository(ProductRepository):
         connection = get_connection()
         cursor = connection.cursor(dictionary=True)
 
-        cursor.execute("SELECT id, name, description, price, stock, status FROM products")
+        cursor.execute("SELECT id, name, description, price, stock, status, image_url FROM products")
 
         products = [
             self._map_row_to_product(row)
@@ -53,7 +54,7 @@ class MySQLProductRepository(ProductRepository):
         cursor = connection.cursor(dictionary=True)
 
         cursor.execute(
-            "SELECT id, name, description, price, stock, status FROM products WHERE id = %s",
+            "SELECT id, name, description, price, stock, status, image_url FROM products WHERE id = %s",
             (product_id,)
         )
 
@@ -73,7 +74,7 @@ class MySQLProductRepository(ProductRepository):
 
         cursor.execute(
             """
-            SELECT id, name, description, price, stock, status
+            SELECT id, name, description, price, stock, status, image_url
             FROM products
             WHERE name LIKE %s
             """,
@@ -101,7 +102,8 @@ class MySQLProductRepository(ProductRepository):
                 description = %s,
                 price = %s,
                 stock = %s,
-                status = %s
+                status = %s,
+                image_url = %s
             WHERE id = %s
             """,
             (
@@ -110,6 +112,7 @@ class MySQLProductRepository(ProductRepository):
                 product.price,
                 product.stock,
                 product.status,
+                product.image_url,
                 product_id
             )
         )
@@ -160,5 +163,6 @@ class MySQLProductRepository(ProductRepository):
             description=row["description"] or "",
             price=float(row["price"]),
             stock=row["stock"],
-            status=row["status"]
+            status=row["status"],
+            image_url=row.get("image_url")
         )

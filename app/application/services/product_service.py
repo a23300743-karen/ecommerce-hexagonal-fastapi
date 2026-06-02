@@ -15,7 +15,8 @@ class ProductService:
         description: str,
         price: float,
         stock: int,
-        status: str = "ACTIVE"
+        status: str = "ACTIVE",
+        image_url: str | None = None
     ) -> Product:
 
         self._validate_product_data(name, description, price, stock, status)
@@ -26,7 +27,8 @@ class ProductService:
             description=description.strip(),
             price=price,
             stock=stock,
-            status=status
+            status=status,
+            image_url=image_url
         )
 
         return self.repository.save(product)
@@ -55,10 +57,11 @@ class ProductService:
         description: str,
         price: float,
         stock: int,
-        status: str
+        status: str,
+        image_url: str | None = None
     ) -> Product:
 
-        self.get_product(product_id)
+        current_product = self.get_product(product_id)
         self._validate_product_data(name, description, price, stock, status)
 
         product = Product(
@@ -67,7 +70,8 @@ class ProductService:
             description=description.strip(),
             price=price,
             stock=stock,
-            status=status
+            status=status,
+            image_url=image_url if image_url is not None else current_product.image_url
         )
 
         updated_product = self.repository.update(product_id, product)

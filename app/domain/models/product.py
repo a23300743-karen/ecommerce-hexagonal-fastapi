@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class Product:
     id: int
@@ -8,3 +9,4 @@ class Product:
     price: float
     stock: int
     status: str = "ACTIVE"
+    image_url: str | None = None

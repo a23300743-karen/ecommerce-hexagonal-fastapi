@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.infrastructure.repositories.mysql_product_repository import MySQLProductRepository
 from app.infrastructure.repositories.mysql_buyer_repository import MySQLBuyerRepository
@@ -28,6 +29,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 product_repository = MySQLProductRepository()
 buyer_repository = MySQLBuyerRepository()

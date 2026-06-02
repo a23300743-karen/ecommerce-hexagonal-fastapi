@@ -1,5 +1,7 @@
-function productImage(name) {
-  const value = name.toLowerCase();
+function productImage(product) {
+  if (product.image_url) return `${API_URL}${product.image_url}`;
+
+  const value = product.name.toLowerCase();
   if (value.includes("mac")) return "img/macbook.jpg";
   if (value.includes("laptop")) return "img/laptop.jpg";
   if (value.includes("mouse")) return "img/mouse.jpg";
@@ -33,7 +35,7 @@ function renderProducts(products) {
     const card = document.createElement("article");
     card.className = "card";
     card.innerHTML = `
-      <img src="${productImage(product.name)}" alt="${product.name}">
+      <img src="${productImage(product)}" alt="${product.name}">
       <div class="card-body">
         <h3>${product.name}</h3>
         <p>${product.description}</p>
@@ -58,6 +60,7 @@ function fillForm(product = null) {
   document.getElementById("price").value = product ? product.price : "";
   document.getElementById("stock").value = product ? product.stock : "";
   document.getElementById("status").value = product ? product.status : "ACTIVE";
+  document.getElementById("image").value = "";
 }
 
 function editProduct(product) {
@@ -65,23 +68,32 @@ function editProduct(product) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+function buildProductFormData() {
+  const formData = new FormData();
+  const image = document.getElementById("image").files[0];
+
+  formData.append("name", document.getElementById("name").value);
+  formData.append("description", document.getElementById("description").value);
+  formData.append("price", document.getElementById("price").value);
+  formData.append("stock", document.getElementById("stock").value);
+  formData.append("status", document.getElementById("status").value);
+
+  if (image) {
+    formData.append("image", image);
+  }
+
+  return formData;
+}
+
 async function saveProduct(event) {
   event.preventDefault();
 
   const id = document.getElementById("product-id").value;
-  const payload = {
-    name: document.getElementById("name").value,
-    description: document.getElementById("description").value,
-    price: Number(document.getElementById("price").value),
-    stock: Number(document.getElementById("stock").value),
-    status: document.getElementById("status").value
-  };
 
   try {
     await apiRequest(id ? `/products/${id}` : "/products/", {
       method: id ? "PUT" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: buildProductFormData()
     });
     fillForm();
     showMessage("product-message", "Producto guardado correctamente.", "success");

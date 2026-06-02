@@ -150,6 +150,15 @@ adapters/websocket/chat_socket.py     # Adapter WebSocket de FastAPI
 
 La logica FAQ esta desacoplada por `FAQPort`. En el futuro se puede reemplazar `FAQMemoryRepository` por MySQL, Redis, embeddings, RAG, OpenAI/LLM o un repositorio de conocimiento externo.
 
+
+## Imagenes de productos
+
+Los productos pueden crearse y actualizarse con una imagen subida desde la computadora. El backend recibe `multipart/form-data`, guarda el archivo en `uploads/products/` y devuelve `image_url`.
+
+El frontend usa esa URL para mostrar la imagen real del producto. Si un producto no tiene imagen, se usa una imagen local por defecto segun el nombre.
+
+Al editar un producto, si no eliges una imagen nueva, se conserva la imagen anterior.
+
 ## Validaciones principales
 
 ### Productos
@@ -219,6 +228,14 @@ Si ya tienes creada la tabla `buyer_profiles` sin `status`, ejecuta:
 ```sql
 ALTER TABLE buyer_profiles
 ADD COLUMN status VARCHAR(20) DEFAULT 'ACTIVE';
+```
+
+
+Para habilitar imagenes de productos en una base existente, ejecuta:
+
+```sql
+ALTER TABLE products
+ADD COLUMN image_url VARCHAR(255) DEFAULT NULL;
 ```
 
 Para autenticacion ejecuta:

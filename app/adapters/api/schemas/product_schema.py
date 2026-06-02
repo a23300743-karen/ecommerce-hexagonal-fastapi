@@ -16,3 +16,4 @@ class ProductResponse(BaseModel):
     price: float
     stock: int
     status: str
+    image_url: str | None = None

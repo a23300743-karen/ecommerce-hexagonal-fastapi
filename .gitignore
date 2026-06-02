@@ -5,3 +5,4 @@ __pycache__/
 .gitconfig-codex
 .idea/
 .vscode/
+uploads/

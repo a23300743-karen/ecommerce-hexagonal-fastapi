@@ -43,6 +43,7 @@ class MemoryProductRepository(ProductRepository):
         current_product.price = product.price
         current_product.stock = product.stock
         current_product.status = product.status
+        current_product.image_url = product.image_url
 
         return current_product
 
