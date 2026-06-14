@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class BuyerProfile:
     id: int
@@ -8,3 +9,4 @@ class BuyerProfile:
     address: str
     phone: str | None = None
     status: str = "ACTIVE"
+    user_id: int | None = None

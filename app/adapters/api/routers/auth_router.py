@@ -9,6 +9,7 @@ from app.adapters.api.schemas.auth_schema import (
     UserResponse
 )
 from app.application.services.auth_service import AuthService
+from app.infrastructure.repositories.mysql_buyer_repository import MySQLBuyerRepository
 from app.infrastructure.repositories.mysql_user_repository import MySQLUserRepository
 from app.infrastructure.security.jwt_service import JWTService
 from app.infrastructure.security.password_service import BcryptPasswordService
@@ -19,12 +20,14 @@ router = APIRouter(
 )
 
 user_repository = MySQLUserRepository()
+buyer_repository = MySQLBuyerRepository()
 password_service = BcryptPasswordService()
 token_service = JWTService()
 auth_service = AuthService(
     user_repository,
     password_service,
-    token_service
+    token_service,
+    buyer_repository
 )
 
 
@@ -35,7 +38,9 @@ def register(request: RegisterRequest):
             request.name,
             request.email,
             request.password,
-            request.role
+            "CUSTOMER",
+            request.address,
+            request.phone
         )
 
         return user

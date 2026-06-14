@@ -1,4 +1,6 @@
+from app.domain.models.buyer_profile import BuyerProfile
 from app.domain.models.user import User
+from app.domain.ports.buyer_repository import BuyerRepository
 from app.domain.ports.password_service import PasswordService
 from app.domain.ports.token_service import TokenService
 from app.domain.ports.user_repository import UserRepository
@@ -12,21 +14,25 @@ class AuthService:
         self,
         user_repository: UserRepository,
         password_service: PasswordService,
-        token_service: TokenService
+        token_service: TokenService,
+        buyer_repository: BuyerRepository | None = None
     ):
         self.user_repository = user_repository
         self.password_service = password_service
         self.token_service = token_service
+        self.buyer_repository = buyer_repository
 
     def register(
         self,
         name: str,
         email: str,
         password: str,
-        role: str = "CUSTOMER"
+        role: str = "CUSTOMER",
+        address: str | None = None,
+        phone: str | None = None
     ) -> User:
 
-        self._validate_register_data(name, email, password, role)
+        self._validate_register_data(name, email, password, role, address, phone)
 
         clean_email = email.strip()
 
@@ -44,7 +50,24 @@ class AuthService:
             status="ACTIVE"
         )
 
-        return self.user_repository.save(user)
+        saved_user = self.user_repository.save(user)
+
+        if role == "CUSTOMER" and self.buyer_repository is not None:
+            existing_buyer = self.buyer_repository.get_by_email(clean_email)
+
+            if existing_buyer is None:
+                buyer = BuyerProfile(
+                    id=0,
+                    name=saved_user.name,
+                    email=saved_user.email,
+                    address=address.strip(),
+                    phone=phone.strip() if phone else None,
+                    status="ACTIVE",
+                    user_id=saved_user.id
+                )
+                self.buyer_repository.save(buyer)
+
+        return saved_user
 
     def login(self, email: str, password: str):
         user = self.user_repository.get_by_email(email.strip())
@@ -108,7 +131,9 @@ class AuthService:
         name: str,
         email: str,
         password: str,
-        role: str
+        role: str,
+        address: str | None,
+        phone: str | None
     ):
 
         if not name or not name.strip():
@@ -122,3 +147,12 @@ class AuthService:
 
         if role not in self.VALID_ROLES:
             raise ValueError("El role debe ser ADMIN o CUSTOMER")
+
+        if role == "CUSTOMER":
+            if not address or not address.strip():
+                raise ValueError("La direccion es obligatoria para clientes")
+
+            if phone:
+                digits = "".join(character for character in phone if character.isdigit())
+                if len(digits) < 10:
+                    raise ValueError("El telefono debe tener minimo 10 digitos")

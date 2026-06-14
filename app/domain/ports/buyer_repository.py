@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from app.domain.models.buyer_profile import BuyerProfile
 
+
 class BuyerRepository(ABC):
 
     @abstractmethod
@@ -13,6 +14,10 @@ class BuyerRepository(ABC):
 
     @abstractmethod
     def get_by_email(self, email: str) -> BuyerProfile | None:
+        pass
+
+    @abstractmethod
+    def get_by_user_id(self, user_id: int) -> BuyerProfile | None:
         pass
 
     @abstractmethod

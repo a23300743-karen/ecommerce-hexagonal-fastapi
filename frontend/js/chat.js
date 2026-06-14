@@ -1,45 +1,57 @@
-let socket = null;
-
-function addMessage(data, className = "") {
-  const box = document.getElementById("chat-box");
-  const div = document.createElement("div");
-  div.className = `chat-message ${className || data.type || ""} bg-white border rounded p-3 mb-2`;
-  const content = data.message ? `<p class="mb-1"><strong>${data.message.user}:</strong> ${data.message.content}</p>` : "";
-  div.innerHTML = `${content}<p class="mb-1">${data.response}</p><span class="badge text-bg-light">${data.type}</span>`;
-  box.appendChild(div);
-  box.scrollTop = box.scrollHeight;
-}
-
+let chatSocket;
+document.addEventListener("DOMContentLoaded", () => {
+  if (!document.getElementById("chat-form")) return;
+  connectChat();
+  document
+    .getElementById("chat-form")
+    .addEventListener("submit", sendChatMessage);
+});
 function connectChat() {
-  socket = new WebSocket(WS_URL);
-
-  socket.onopen = () => showMessage("chat-status", "Conectado al chat.", "success");
-  socket.onclose = () => showMessage("chat-status", "Conexion cerrada.", "error");
-  socket.onerror = () => showMessage("chat-status", "Error de conexion WebSocket.", "error");
-
-  socket.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    addMessage(data);
-  };
+  chatSocket = new WebSocket(
+    `${WS_URL}?token=${encodeURIComponent(getAccessToken())}`,
+  );
+  chatSocket.onopen = () =>
+    (document.getElementById("chat-status").textContent = "Soporte conectado");
+  chatSocket.onmessage = (event) => handleChatPayload(JSON.parse(event.data));
+  chatSocket.onclose = () =>
+    (document.getElementById("chat-status").textContent =
+      "Soporte desconectado");
+  chatSocket.onerror = () =>
+    (document.getElementById("chat-status").textContent =
+      "No se pudo conectar");
 }
-
+function handleChatPayload(data) {
+  if (data.type === "history") {
+    document.getElementById("chat-box").innerHTML = "";
+    data.messages.forEach((message) =>
+      appendChat(
+        message.content,
+        message.sender_role === "CUSTOMER" ? "user" : "assistant",
+      ),
+    );
+    return;
+  }
+  if (data.type === "message")
+    appendChat(
+      data.message.content,
+      data.message.sender_role === "CUSTOMER" ? "user" : "assistant",
+    );
+  if (data.type === "error") appendChat(data.response, "assistant");
+}
 function sendChatMessage(event) {
   event.preventDefault();
-
-  const input = document.getElementById("chat-message");
-  const content = input.value.trim();
-  if (!content || !socket || socket.readyState !== WebSocket.OPEN) return;
-
-  const user = getCurrentUser();
-  socket.send(JSON.stringify({
-    user: user ? user.name : "client",
-    content
-  }));
-
+  const input = document.getElementById("chat-input"),
+    content = input.value.trim();
+  if (!content || chatSocket?.readyState !== WebSocket.OPEN) return;
+  appendChat(content, "user");
+  chatSocket.send(JSON.stringify({ content }));
   input.value = "";
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-  connectChat();
-  document.getElementById("chat-form").addEventListener("submit", sendChatMessage);
-});
+function appendChat(text, type) {
+  const box = document.getElementById("chat-box"),
+    bubble = document.createElement("div");
+  bubble.className = `chat-bubble ${type}`;
+  bubble.textContent = text;
+  box.appendChild(bubble);
+  box.scrollTop = box.scrollHeight;
+}

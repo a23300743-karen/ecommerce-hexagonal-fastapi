@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class OrderItem:
     id: int
@@ -8,3 +9,4 @@ class OrderItem:
     quantity: int
     unit_price: float
     subtotal: float
+    product_name: str | None = None

@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from app.domain.models.order import Order
 from app.domain.models.order_item import OrderItem
 
+
 class OrderRepository(ABC):
 
     @abstractmethod
@@ -14,6 +15,10 @@ class OrderRepository(ABC):
 
     @abstractmethod
     def get_all(self) -> list[Order]:
+        pass
+
+    @abstractmethod
+    def get_by_buyer_id(self, buyer_id: int) -> list[Order]:
         pass
 
     @abstractmethod

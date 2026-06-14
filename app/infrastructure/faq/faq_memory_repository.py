@@ -5,36 +5,34 @@ class FAQMemoryRepository(FAQPort):
 
     FAQS = [
         {
-            "keywords": ["orden", "pedido", "estado", "compra"],
-            "answer": "Puedes consultar tus ordenes en /orders/. Si tienes el id, revisa /orders/{id}."
+            "keywords": ["cancel"],
+            "answer": "Puedes cancelar una orden activa desde la seccion Mis compras. Al cancelarla, las unidades regresan al inventario."
         },
         {
-            "keywords": ["pago", "pagos", "tarjeta", "metodos"],
-            "answer": "Por ahora aceptamos pagos registrados por el sistema. La integracion con pasarela de pago puede agregarse como adapter externo."
+            "keywords": ["pag", "tarjeta", "metodo"],
+            "answer": "Actualmente la tienda registra la compra al finalizar el carrito. La integracion con pagos bancarios puede agregarse posteriormente."
         },
         {
-            "keywords": ["envio", "entrega", "tiempo", "tarda"],
+            "keywords": ["envi", "entrega", "tiempo", "tarda", "lleg"],
             "answer": "El tiempo estimado de envio es de 3 a 5 dias habiles despues de confirmar la orden."
         },
         {
-            "keywords": ["horario", "atencion", "soporte"],
+            "keywords": ["horario", "atencion", "soporte", "atienden"],
             "answer": "Nuestro horario de atencion es de lunes a viernes de 9:00 a 18:00."
         },
         {
-            "keywords": ["cancelar", "cancelacion"],
-            "answer": "Puedes cancelar una orden desde PATCH /orders/{id}/cancel si la orden existe y no ha sido cancelada antes."
+            "keywords": ["stock", "dispon", "existencia", "producto"],
+            "answer": "El catalogo muestra solamente productos activos con existencias. La cantidad disponible aparece en cada producto."
         },
         {
-            "keywords": ["stock", "disponible", "existencia"],
-            "answer": "Puedes revisar productos disponibles desde GET /products/ o buscar por nombre con GET /products/search?name=..."
+            "keywords": ["orden", "pedido", "estado", "compra", "historial"],
+            "answer": "Puedes consultar el estado y detalle de tus pedidos en la seccion Mis compras."
         }
     ]
 
     def get_answer(self, question: str) -> str | None:
         normalized_question = question.lower()
-
         for faq in self.FAQS:
             if any(keyword in normalized_question for keyword in faq["keywords"]):
                 return faq["answer"]
-
         return None

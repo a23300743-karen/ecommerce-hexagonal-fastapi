@@ -96,11 +96,14 @@ class MySQLOrderRepository(OrderRepository):
         cursor.execute(
             """
             SELECT
-                id,
-                buyer_id,
-                total,
-                status
+                purchase_orders.id,
+                purchase_orders.buyer_id,
+                purchase_orders.total,
+                purchase_orders.status,
+                buyer_profiles.name AS buyer_name
             FROM purchase_orders
+            INNER JOIN buyer_profiles ON buyer_profiles.id = purchase_orders.buyer_id
+            ORDER BY purchase_orders.id DESC
             """
         )
 
@@ -113,13 +116,43 @@ class MySQLOrderRepository(OrderRepository):
                     id=row["id"],
                     buyer_id=row["buyer_id"],
                     total=float(row["total"]),
-                    status=row["status"]
+                    status=row["status"],
+                    buyer_name=row.get("buyer_name")
                 )
             )
 
         cursor.close()
         connection.close()
 
+        return orders
+
+    def get_by_buyer_id(self, buyer_id: int):
+        connection = get_connection()
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute(
+            """
+            SELECT purchase_orders.id, purchase_orders.buyer_id,
+                   purchase_orders.total, purchase_orders.status,
+                   buyer_profiles.name AS buyer_name
+            FROM purchase_orders
+            INNER JOIN buyer_profiles ON buyer_profiles.id = purchase_orders.buyer_id
+            WHERE purchase_orders.buyer_id=%s
+            ORDER BY purchase_orders.id DESC
+            """,
+            (buyer_id,)
+        )
+        orders = [
+            Order(
+                id=row["id"],
+                buyer_id=row["buyer_id"],
+                total=float(row["total"]),
+                status=row["status"],
+                buyer_name=row.get("buyer_name")
+            )
+            for row in cursor.fetchall()
+        ]
+        cursor.close()
+        connection.close()
         return orders
 
     def get_by_id(
@@ -136,12 +169,14 @@ class MySQLOrderRepository(OrderRepository):
         cursor.execute(
             """
             SELECT
-                id,
-                buyer_id,
-                total,
-                status
+                purchase_orders.id,
+                purchase_orders.buyer_id,
+                purchase_orders.total,
+                purchase_orders.status,
+                buyer_profiles.name AS buyer_name
             FROM purchase_orders
-            WHERE id=%s
+            INNER JOIN buyer_profiles ON buyer_profiles.id = purchase_orders.buyer_id
+            WHERE purchase_orders.id=%s
             """,
             (
                 order_id,
@@ -161,7 +196,8 @@ class MySQLOrderRepository(OrderRepository):
             id=row["id"],
             buyer_id=row["buyer_id"],
             total=float(row["total"]),
-            status=row["status"]
+            status=row["status"],
+            buyer_name=row.get("buyer_name")
         )
 
     def get_items_by_order_id(
@@ -178,14 +214,16 @@ class MySQLOrderRepository(OrderRepository):
         cursor.execute(
             """
             SELECT
-                id,
-                order_id,
-                product_id,
-                quantity,
-                unit_price,
-                subtotal
+                order_items.id,
+                order_items.order_id,
+                order_items.product_id,
+                order_items.quantity,
+                order_items.unit_price,
+                order_items.subtotal,
+                products.name AS product_name
             FROM order_items
-            WHERE order_id=%s
+            INNER JOIN products ON products.id = order_items.product_id
+            WHERE order_items.order_id=%s
             """,
             (
                 order_id,
@@ -203,7 +241,8 @@ class MySQLOrderRepository(OrderRepository):
                     product_id=row["product_id"],
                     quantity=row["quantity"],
                     unit_price=float(row["unit_price"]),
-                    subtotal=float(row["subtotal"])
+                    subtotal=float(row["subtotal"]),
+                    product_name=row.get("product_name")
                 )
             )
 

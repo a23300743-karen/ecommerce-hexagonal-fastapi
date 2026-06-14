@@ -38,8 +38,10 @@ La regla principal del proyecto es que `domain` y `application` no dependen de F
 
 ### Orders
 
-- `POST /orders/`
-- `GET /orders/`
+- `POST /orders/` (checkout del carrito del usuario autenticado)
+- `GET /orders/me`
+- `GET /orders/me/{order_id}/items`
+- `GET /orders/` (solo ADMIN)
 - `GET /orders/{order_id}`
 - `GET /orders/{order_id}/items`
 - `PATCH /orders/{order_id}/cancel`
@@ -53,7 +55,9 @@ La regla principal del proyecto es que `domain` y `application` no dependen de F
 
 ### Realtime Chat
 
-- `WS /ws/chat`
+- `GET /support/conversations` (solo ADMIN)
+- `GET /support/conversations/{id}/messages` (solo ADMIN)
+- `WS /ws/chat?token=<access_token>`
 
 ## Autenticacion y autorizacion
 
@@ -334,3 +338,53 @@ Crear orden:
   "quantity": 2
 }
 ```
+
+
+## Frontend Bootstrap
+
+El frontend esta en `frontend/` y utiliza HTML, Bootstrap y JavaScript sin frameworks adicionales.
+
+- `login.html`: inicio de sesion y redireccion por rol.
+- `register.html`: registro de clientes y creacion automatica de su perfil de compra.
+- `products.html`: catalogo, buscador, carrito, checkout y chat FAQ.
+- `orders.html`: historial de compras del usuario autenticado.
+- `admin.html`: CRUD de productos con imagen y consulta/cancelacion de ordenes.
+
+Para ejecutarlo:
+
+```bash
+python -m http.server 5500 --directory frontend
+```
+
+Abrir `http://127.0.0.1:5500` con el backend ejecutandose en `http://127.0.0.1:8000`.
+
+## Migracion obligatoria para usuarios compradores
+
+Si la base ya existia antes de este cambio, ejecutar una sola vez:
+
+```sql
+SOURCE migrations/004_link_users_buyers.sql;
+```
+
+En phpMyAdmin tambien se puede abrir y ejecutar directamente el contenido de `migrations/004_link_users_buyers.sql`. Despues se debe ejecutar `migrations/005_create_support_chat.sql` para habilitar conversaciones persistentes y respuestas del administrador.
+La columna `buyer_profiles.user_id` vincula la cuenta autenticada con su perfil comprador. Los clientes nuevos se vinculan automaticamente al registrarse. Los usuarios antiguos necesitan un perfil con el mismo correo o una vinculacion manual.
+
+El registro publico siempre crea rol `CUSTOMER`. Los administradores se crean de forma controlada en MySQL para impedir que una persona se asigne permisos administrativos desde el navegador.
+
+
+## Despliegue Blue/Green
+
+El proyecto incluye dos ambientes Docker, un reverse proxy Nginx, health checks,
+promocion validada y rollback sin detener el proxy. La guia completa esta en
+[`BLUE_GREEN.md`](BLUE_GREEN.md).
+
+Inicio rapido:
+
+```bash
+docker compose up -d --build
+./scripts/promote.sh green
+./scripts/rollback.sh
+```
+
+En Windows tambien estan disponibles `scripts/promote.ps1` y
+`scripts/rollback.ps1`.

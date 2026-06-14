@@ -25,6 +25,13 @@ class MemoryOrderRepository(OrderRepository):
     def get_all(self):
         return self.orders
 
+    def get_by_buyer_id(self, buyer_id: int):
+        return [
+            order
+            for order in self.orders
+            if order.buyer_id == buyer_id
+        ]
+
     def get_by_id(self, order_id: int):
         for order in self.orders:
             if order.id == order_id:
